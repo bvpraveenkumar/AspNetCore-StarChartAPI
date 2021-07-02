@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using StarChart.Data;
+using StarChart.Models;
 
 namespace StarChart.Controllers
 {
@@ -75,6 +76,65 @@ namespace StarChart.Controllers
             }
 
             return Ok(result);
+        }
+
+        [HttpPost]
+        public IActionResult Create([FromBody]CelestialObject input)
+        {
+            _context.CelestialObjects.Add(input);
+            _context.SaveChanges();
+
+            return CreatedAtRoute("GetById", new { id = input.Id }, input);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] CelestialObject input)
+        {
+            var result = _context.CelestialObjects.Where(c => c.Id == id)
+                                        .SingleOrDefault();
+
+            if (result == null)
+                return NotFound();
+
+            result.Name = input.Name;
+            result.OrbitalPeriod = input.OrbitalPeriod;
+            result.OrbitedObjectId = input.OrbitedObjectId;
+
+            _context.Update(result);
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}/{name}")]
+        public IActionResult RenameObject(int id, string name)
+        {
+            var result = _context.CelestialObjects.Where(c => c.Id == id)
+                                        .SingleOrDefault();
+
+            if (result == null)
+                return NotFound();
+
+            result.Name = name;
+
+            _context.Update(result);
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var result = _context.CelestialObjects.Where(c => c.Id == id || c.OrbitedObjectId == id);
+
+            if(!result.Any())
+                return NotFound();
+
+            _context.CelestialObjects.RemoveRange(result);
+            _context.SaveChanges();
+
+            return NoContent();
         }
     }
 }
