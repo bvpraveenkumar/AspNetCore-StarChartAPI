@@ -16,7 +16,7 @@ namespace StarChart.Controllers
             _context = context;
         }
 
-        [HttpGet("id:int", Name = "GetById")]
+        [HttpGet("{id:int}", Name = "GetById")]
         public IActionResult GetById(int id)
         {
             var result = _context.CelestialObjects.Where(c => c.Id == id)
@@ -26,6 +26,7 @@ namespace StarChart.Controllers
                 return NotFound();
 
             var objs = _context.CelestialObjects.Where(c => c.OrbitedObjectId == id);
+            result.Satellites = new System.Collections.Generic.List<Models.CelestialObject>();
             foreach (var item in objs)
             {
                 result.Satellites.Add(item);
@@ -34,19 +35,22 @@ namespace StarChart.Controllers
             return Ok(result);
         }
 
-        [HttpGet("name:string", Name = "GetByName")]
+        [HttpGet("{name}", Name = "GetByName")]
         public IActionResult GetByName(string name)
         {
-            var result = _context.CelestialObjects.Where(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
-                                                    .SingleOrDefault();
+            var result = _context.CelestialObjects.Where(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
-            if (result == null)
+            if (!result.Any())
                 return NotFound();
 
-            var objs = _context.CelestialObjects.Where(c => c.OrbitedObjectId == result.Id);
-            foreach (var item in objs)
+            foreach (var celestial in result)
             {
-                result.Satellites.Add(item);
+                var objs = _context.CelestialObjects.Where(c => c.OrbitedObjectId == celestial.Id);
+                celestial.Satellites = new System.Collections.Generic.List<Models.CelestialObject>();
+                foreach (var item in objs)
+                {
+                    celestial.Satellites.Add(item);
+                }
             }
 
             return Ok(result);
@@ -57,8 +61,18 @@ namespace StarChart.Controllers
         {
             var result = _context.CelestialObjects;
 
-            if (result == null)
+            if (!result.Any())
                 return NotFound();
+
+            foreach (var celestial in result)
+            {
+                var objs = _context.CelestialObjects.Where(c => c.OrbitedObjectId == celestial.Id);
+                celestial.Satellites = new System.Collections.Generic.List<Models.CelestialObject>();
+                foreach (var item in objs)
+                {
+                    celestial.Satellites.Add(item);
+                }
+            }
 
             return Ok(result);
         }
